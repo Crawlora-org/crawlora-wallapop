@@ -23,11 +23,16 @@ func TestGeneratedClientRequestAndAllowlist(t *testing.T) {
 			t.Errorf("escaped path = %q", r.URL.EscapedPath())
 		}
 		if "filter" != "" {
-			if got := r.URL.Query().Get("filter"); got != "one" {
+			if got := r.URL.Query().Get("filter"); got != "one,two" {
 				t.Errorf("query value = %q", got)
 			}
-			if true && len(r.URL.Query()["filter"]) != 2 {
-				t.Errorf("array query values = %#v", r.URL.Query()["filter"])
+			if true {
+				if got := r.URL.Query().Get("filter"); got != "one,two" {
+					t.Errorf("array query value = %q, want %q", got, "one,two")
+				}
+				if false && len(r.URL.Query()["filter"]) != 2 {
+					t.Errorf("array query values = %#v", r.URL.Query()["filter"])
+				}
 			}
 		}
 		if "q" != "" && !strings.Contains(r.URL.RawQuery, "q=space+%26+value") {

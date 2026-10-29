@@ -1,4 +1,5 @@
 {
+  "api_path_prefix": "/wallapop/",
   "async_class_name": "AsyncWallapopClient",
   "class_name": "WallapopClient",
   "contract_revision": "sha256:b02fd52a304c711998d8723a17adfd9b3eb7815d77f444a3f276679cf8ff4019",

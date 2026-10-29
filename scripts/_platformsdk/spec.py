@@ -229,6 +229,7 @@ def config_for(platform: str, *, version: str = "0.1.0", revision: str = "") -> 
         "platform": platform,
         "display_name": display,
         "group_name": {"tiktok-mobile": "tiktokMobile"}.get(platform, platform),
+        "api_path_prefix": PLATFORM_PATH_PREFIXES.get(platform, ("/" + platform + "/",))[0],
         "class_name": cls,
         "async_class_name": "Async" + cls,
         "npm_name": "@crawlora-org/" + platform,

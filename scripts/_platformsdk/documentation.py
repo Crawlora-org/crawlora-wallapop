@@ -556,6 +556,7 @@ def _values(config: dict[str, Any], operations: list[dict[str, Any]]) -> dict[st
     return {
         "PLATFORM": platform,
         "DISPLAY_NAME": display,
+        "API_PATH_PREFIX": str(config.get("api_path_prefix", "/" + platform + "/")),
         "CLASS_NAME": cls,
         "ASYNC_CLASS_NAME": async_cls,
         "NPM_NAME": npm,
