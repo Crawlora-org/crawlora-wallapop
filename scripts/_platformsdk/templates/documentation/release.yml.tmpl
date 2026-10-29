@@ -1,0 +1,712 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+{{NPM_OIDC_DISPATCH_INPUT}}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: {{PLATFORM}}-release
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    uses: ./.github/workflows/ci.yml
+
+  verify-release-version:
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.value }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - id: version
+        name: Match release tag and every package manifest
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          python - <<'PY'
+          import json, os, pathlib, re, tomllib, xml.etree.ElementTree as ET
+          event = os.environ["EVENT_NAME"]
+          tag = os.environ["REF_NAME"]
+          if event == "push" and not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+", tag):
+              raise SystemExit("release tag must be vMAJOR.MINOR.PATCH")
+          config = json.loads(pathlib.Path("platform.json").read_text())
+          npm = json.loads(pathlib.Path("javascript/package.json").read_text())["version"]
+          pyproject = tomllib.loads(pathlib.Path("python/pyproject.toml").read_text())
+          python_version = pyproject["project"]["version"]
+          rust_manifest = tomllib.loads(pathlib.Path("rust/Cargo.toml").read_text())
+          rust_package = rust_manifest["package"]
+          if event == "push":
+              version = tag[1:]
+          elif re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+", tag):
+              version = tag[1:]
+          else:
+              version = npm
+          platform = config["platform"]
+          go_module = pathlib.Path("go.mod").read_text()
+          go_client = pathlib.Path("client.go").read_text()
+          ruby_version = pathlib.Path(f"ruby/lib/crawlora/{platform}/version.rb").read_text()
+          gemspec = pathlib.Path(f"ruby/{config['ruby_gem_name']}.gemspec").read_text()
+          pom = ET.parse("java/pom.xml").getroot()
+          ns = {"m": "http://maven.apache.org/POM/4.0.0"}
+          composer = json.loads(pathlib.Path("composer.json").read_text())
+          checks = {
+              "platform.json": config.get("version") == version,
+              "npm": npm == version,
+              "PyPI": python_version == version,
+              "Rust": rust_package.get("name") == config.get("rust_crate_name") and rust_package.get("version") == version,
+              "Go module": re.search(r"(?m)^module\s+" + re.escape(config["golang_module_name"]) + r"\s*$", go_module) is not None and re.search(r'(?m)^\s*Version\s*=\s*"' + re.escape(version) + r'"', go_client) is not None,
+              "RubyGems": config.get("ruby_gem_name") in gemspec and re.search(r'(?m)^\s*VERSION\s*=\s*["\']' + re.escape(version) + r'["\']', ruby_version) is not None,
+              "Maven Central": (pom.findtext("m:groupId", namespaces=ns), pom.findtext("m:artifactId", namespaces=ns), pom.findtext("m:version", namespaces=ns)) == (config.get("maven_group_id"), config.get("maven_artifact_id"), version),
+              "Packagist": composer.get("name") == config.get("php_package_name"),
+          }
+          failed = [name for name, matches in checks.items() if not matches]
+          if failed:
+              raise SystemExit("tag/package manifest mismatch: " + ", ".join(failed))
+          print(f"value={version}", file=open(os.environ["GITHUB_OUTPUT"], "a"))
+          PY
+
+{{NPM_OIDC_VALIDATION_JOB}}
+  publish-npm:
+    needs: [validate, verify-release-version]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          scope: '@crawlora-org'
+      - name: Install npm trusted-publishing-capable CLI
+        run: |
+          npm install --global npm@11.21.0
+          test "$(npm --version)" = "11.21.0"
+      - name: Check exact version in npm registry
+        id: registry
+        env:
+          PACKAGE: "{{NPM_NAME}}"
+          VERSION: ${{ needs.verify-release-version.outputs.version }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.error, urllib.request
+          url = "https://registry.npmjs.org/" + os.environ["PACKAGE"].replace("/", "%2f") + "/" + os.environ["VERSION"]
+          request = urllib.request.Request(url, headers={"Accept": "application/json"})
+          try:
+              with urllib.request.urlopen(request, timeout=20) as response:
+                  if response.status != 200:
+                      raise SystemExit(f"unexpected npm registry status {response.status}")
+                  payload = json.load(response)
+                  if payload.get("version") != os.environ["VERSION"]:
+                      raise SystemExit("npm registry returned a different version")
+                  exists = "true"
+          except urllib.error.HTTPError as error:
+              if error.code == 404:
+                  exists = "false"
+              else:
+                  raise SystemExit(f"npm registry check failed with HTTP {error.code}")
+          except urllib.error.URLError as error:
+              raise SystemExit(f"npm registry check failed: {error.reason}")
+          print(f"exists={exists}", file=open(os.environ["GITHUB_OUTPUT"], "a"))
+          PY
+      - name: Publish exact npm package version
+        if: steps.registry.outputs.exists == 'false'
+        working-directory: javascript
+        run: npm publish --access public
+      - name: Confirm npm version is available
+        env:
+          PACKAGE: "{{NPM_NAME}}"
+          VERSION: ${{ needs.verify-release-version.outputs.version }}
+        run: |
+          python - <<'PY'
+          import json, os, time, urllib.error, urllib.request
+          url = "https://registry.npmjs.org/" + os.environ["PACKAGE"].replace("/", "%2f") + "/" + os.environ["VERSION"]
+          deadline = time.monotonic() + 300
+          while True:
+              remaining = deadline - time.monotonic()
+              if remaining <= 0:
+                  raise SystemExit("published npm version is not visible after 5 minutes")
+              try:
+                  with urllib.request.urlopen(url, timeout=min(20, remaining)) as response:
+                      payload = json.load(response)
+                      if response.status == 200 and payload.get("version") == os.environ["VERSION"]:
+                          print("npm version is available")
+                          break
+                      raise SystemExit("npm registry returned an unexpected version")
+              except urllib.error.HTTPError as error:
+                  if error.code != 404:
+                      raise SystemExit(f"npm verification failed with HTTP {error.code}")
+                  remaining = deadline - time.monotonic()
+                  if remaining <= 0:
+                      raise SystemExit("published npm version is not visible after 5 minutes")
+                  time.sleep(min(10, remaining))
+              except urllib.error.URLError as error:
+                  raise SystemExit(f"npm verification failed: {error.reason}")
+          PY
+
+  publish-pypi:
+    needs: [validate, verify-release-version]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install build twine
+      - run: python -m build --outdir dist
+        working-directory: python
+      - name: Check exact version on PyPI
+        id: registry
+        env:
+          PACKAGE: "{{PYTHON_NAME}}"
+          VERSION: ${{ needs.verify-release-version.outputs.version }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.error, urllib.request
+          url = f"https://pypi.org/pypi/{os.environ['PACKAGE']}/{os.environ['VERSION']}/json"
+          try:
+              with urllib.request.urlopen(url, timeout=20) as response:
+                  payload = json.load(response)
+                  if response.status != 200 or payload.get("info", {}).get("version") != os.environ["VERSION"]:
+                      raise SystemExit("PyPI returned an unexpected version")
+                  exists = "true"
+          except urllib.error.HTTPError as error:
+              if error.code == 404:
+                  exists = "false"
+              else:
+                  raise SystemExit(f"PyPI check failed with HTTP {error.code}")
+          except urllib.error.URLError as error:
+              raise SystemExit(f"PyPI check failed: {error.reason}")
+          print(f"exists={exists}", file=open(os.environ["GITHUB_OUTPUT"], "a"))
+          PY
+      - name: Publish exact PyPI package version
+        if: steps.registry.outputs.exists == 'false'
+        working-directory: python
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: python -m twine upload dist/*
+      - name: Confirm PyPI version is available
+        env:
+          PACKAGE: "{{PYTHON_NAME}}"
+          VERSION: ${{ needs.verify-release-version.outputs.version }}
+        run: |
+          python - <<'PY'
+          import json, os, time, urllib.error, urllib.request
+          url = f"https://pypi.org/pypi/{os.environ['PACKAGE']}/{os.environ['VERSION']}/json"
+          deadline = time.monotonic() + 300
+          while True:
+              remaining = deadline - time.monotonic()
+              if remaining <= 0:
+                  raise SystemExit("published PyPI version is not visible after 5 minutes")
+              try:
+                  with urllib.request.urlopen(url, timeout=min(20, remaining)) as response:
+                      payload = json.load(response)
+                      if response.status == 200 and payload.get("info", {}).get("version") == os.environ["VERSION"]:
+                          print("PyPI version is available")
+                          break
+                      raise SystemExit("PyPI returned an unexpected version")
+              except urllib.error.HTTPError as error:
+                  if error.code != 404:
+                      raise SystemExit(f"PyPI verification failed with HTTP {error.code}")
+                  remaining = deadline - time.monotonic()
+                  if remaining <= 0:
+                      raise SystemExit("published PyPI version is not visible after 5 minutes")
+                  time.sleep(min(10, remaining))
+              except urllib.error.URLError as error:
+                  raise SystemExit(f"PyPI verification failed: {error.reason}")
+          PY
+
+  verify-go-module:
+    needs: [validate, verify-release-version]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for the tagged Go module on proxy.golang.org
+        env:
+          MODULE: "{{GO_MODULE}}"
+          VERSION: ${{ needs.verify-release-version.outputs.version }}
+        run: |
+          python - <<'PY'
+          import json, os, time, urllib.error, urllib.parse, urllib.request
+          module = "".join("!" + c.lower() if c.isupper() else c for c in os.environ["MODULE"])
+          version = "v" + os.environ["VERSION"]
+          url = f"https://proxy.golang.org/{urllib.parse.quote(module, safe='/!')}/@v/{version}.info"
+          deadline = time.monotonic() + 300
+          while True:
+              remaining = deadline - time.monotonic()
+              if remaining <= 0:
+                  raise SystemExit("Go module version is not visible after 5 minutes")
+              try:
+                  with urllib.request.urlopen(url, timeout=min(20, remaining)) as response:
+                      payload = json.load(response)
+                      if response.status == 200 and payload.get("Version") == version:
+                          print("Go module version is available")
+                          break
+                      raise SystemExit("Go proxy returned an unexpected module version")
+              except urllib.error.HTTPError as error:
+                  if error.code != 404:
+                      raise SystemExit(f"Go proxy verification failed with HTTP {error.code}")
+                  time.sleep(min(10, remaining))
+              except urllib.error.URLError as error:
+                  raise SystemExit(f"Go proxy verification failed: {error.reason}")
+          PY
+
+  publish-crates-io:
+    needs: [validate, verify-release-version]
+    runs-on: ubuntu-latest
+    environment: crates-io
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
+      - name: Check exact version on crates.io
+        id: registry
+        env:
+          PACKAGE: "{{RUST_CRATE_NAME}}"
+          VERSION: ${{ needs.verify-release-version.outputs.version }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.error, urllib.request
+          url = f"https://crates.io/api/v1/crates/{os.environ['PACKAGE']}/{os.environ['VERSION']}"
+          request = urllib.request.Request(url, headers={"User-Agent": "Crawlora-platform-sdk-release"})
+          try:
+              with urllib.request.urlopen(request, timeout=20) as response:
+                  payload = json.load(response)
+                  crate = payload.get("version") if isinstance(payload, dict) else None
+                  if response.status != 200 or not isinstance(crate, dict) or crate.get("num") != os.environ["VERSION"]:
+                      raise SystemExit("crates.io returned a mismatched version")
+                  exists = "true"
+          except urllib.error.HTTPError as error:
+              if error.code == 404:
+                  exists = "false"
+              else:
+                  raise SystemExit(f"crates.io check failed with HTTP {error.code}")
+          except urllib.error.URLError as error:
+              raise SystemExit(f"crates.io check failed: {error.reason}")
+          print(f"exists={exists}", file=open(os.environ["GITHUB_OUTPUT"], "a"))
+          PY
+      - name: Validate the crate package
+        if: steps.registry.outputs.exists == 'false'
+        run: cargo publish --manifest-path rust/Cargo.toml --locked --dry-run
+      - uses: rust-lang/crates-io-auth-action@v1
+        if: steps.registry.outputs.exists == 'false'
+        id: auth
+      - name: Publish the exact crate version
+        if: steps.registry.outputs.exists == 'false'
+        run: cargo publish --manifest-path rust/Cargo.toml --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+      - name: Confirm crates.io version is available
+        env:
+          PACKAGE: "{{RUST_CRATE_NAME}}"
+          VERSION: ${{ needs.verify-release-version.outputs.version }}
+        run: |
+          python - <<'PY'
+          import json, os, time, urllib.error, urllib.request
+          url = f"https://crates.io/api/v1/crates/{os.environ['PACKAGE']}/{os.environ['VERSION']}"
+          request = urllib.request.Request(url, headers={"User-Agent": "Crawlora-platform-sdk-release"})
+          deadline = time.monotonic() + 300
+          while True:
+              remaining = deadline - time.monotonic()
+              if remaining <= 0:
+                  raise SystemExit("crates.io version is not visible after 5 minutes")
+              try:
+                  with urllib.request.urlopen(request, timeout=min(20, remaining)) as response:
+                      payload = json.load(response)
+                      crate = payload.get("version") if isinstance(payload, dict) else None
+                      if response.status == 200 and isinstance(crate, dict) and crate.get("num") == os.environ["VERSION"]:
+                          print("crates.io version is available")
+                          break
+                      raise SystemExit("crates.io returned a mismatched version")
+              except urllib.error.HTTPError as error:
+                  if error.code != 404:
+                      raise SystemExit(f"crates.io verification failed with HTTP {error.code}")
+                  time.sleep(min(10, remaining))
+              except urllib.error.URLError as error:
+                  raise SystemExit(f"crates.io verification failed: {error.reason}")
+          PY
+
+  publish-rubygems:
+    needs: [validate, verify-release-version]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+      - run: gem build ./*.gemspec
+        working-directory: ruby
+      - name: Check exact version on RubyGems
+        id: registry
+        env:
+          PACKAGE: "{{GEM_NAME}}"
+          VERSION: ${{ needs.verify-release-version.outputs.version }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.error, urllib.request
+          url = f"https://rubygems.org/api/v2/rubygems/{os.environ['PACKAGE']}/versions/{os.environ['VERSION']}.json"
+          try:
+              with urllib.request.urlopen(url, timeout=20) as response:
+                  payload = json.load(response)
+                  if payload.get("number") != os.environ["VERSION"]:
+                      raise SystemExit("RubyGems returned a different version")
+                  exists = "true"
+          except urllib.error.HTTPError as error:
+              if error.code == 404:
+                  exists = "false"
+              else:
+                  raise SystemExit(f"RubyGems check failed with HTTP {error.code}")
+          print(f"exists={exists}", file=open(os.environ["GITHUB_OUTPUT"], "a"))
+          PY
+      - name: Publish exact RubyGems version
+        if: steps.registry.outputs.exists == 'false'
+        working-directory: ruby
+        env:
+          GEM_HOST_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+        run: gem push "{{GEM_NAME}}-${{ needs.verify-release-version.outputs.version }}.gem"
+      - name: Confirm RubyGems version is available
+        env:
+          PACKAGE: "{{GEM_NAME}}"
+          VERSION: ${{ needs.verify-release-version.outputs.version }}
+        run: |
+          python - <<'PY'
+          import json, os, time, urllib.error, urllib.request
+          url = f"https://rubygems.org/api/v2/rubygems/{os.environ['PACKAGE']}/versions/{os.environ['VERSION']}.json"
+          deadline = time.monotonic() + 300
+          while True:
+              remaining = deadline - time.monotonic()
+              if remaining <= 0:
+                  raise SystemExit("RubyGems version is not visible after 5 minutes")
+              try:
+                  with urllib.request.urlopen(url, timeout=min(20, remaining)) as response:
+                      payload = json.load(response)
+                      if response.status == 200 and payload.get("number") == os.environ["VERSION"]:
+                          print("RubyGems version is available")
+                          break
+                      raise SystemExit("RubyGems returned an unexpected version")
+              except urllib.error.HTTPError as error:
+                  if error.code != 404:
+                      raise SystemExit(f"RubyGems verification failed with HTTP {error.code}")
+                  time.sleep(min(10, remaining))
+              except urllib.error.URLError as error:
+                  raise SystemExit(f"RubyGems verification failed: {error.reason}")
+          PY
+
+  publish-maven-central:
+    needs: [validate, verify-release-version]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check exact version on Maven Central
+        id: registry
+        env:
+          ARTIFACT: "{{MAVEN_ARTIFACT}}"
+          VERSION: ${{ needs.verify-release-version.outputs.version }}
+        run: |
+          python - <<'PY'
+          import os, urllib.error, urllib.request, xml.etree.ElementTree as ET
+          artifact = os.environ["ARTIFACT"]
+          version = os.environ["VERSION"]
+          url = f"https://repo.maven.apache.org/maven2/net/crawlora/{artifact}/{version}/{artifact}-{version}.pom"
+          request = urllib.request.Request(url, headers={"Accept": "application/xml"})
+          try:
+              with urllib.request.urlopen(request, timeout=20) as response:
+                  pom = ET.fromstring(response.read())
+              ns = {"m": "http://maven.apache.org/POM/4.0.0"}
+              coords = (pom.findtext("m:groupId", namespaces=ns), pom.findtext("m:artifactId", namespaces=ns), pom.findtext("m:version", namespaces=ns))
+              if coords != ("net.crawlora", artifact, version):
+                  raise SystemExit("Maven Central returned mismatched POM coordinates")
+              exists = "true"
+          except urllib.error.HTTPError as error:
+              if error.code == 404:
+                  exists = "false"
+              else:
+                  raise SystemExit(f"Maven Central check failed with HTTP {error.code}")
+          print(f"exists={exists}", file=open(os.environ["GITHUB_OUTPUT"], "a"))
+          PY
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+          cache-dependency-path: java/pom.xml
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+      - name: Set up Maven 3.9.16
+        run: |
+          set -euo pipefail
+          version=3.9.16
+          checksum=831a8591fe20c8243b1dbe7d71e3244f31d1665b0804b2e825e38cbbe5ce0cafb8338851f90780735568773e0a6cd07bbec107cda0b896b008b861075358b6f6
+          url="https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/$version/apache-maven-$version-bin.tar.gz"
+          archive="$RUNNER_TEMP/apache-maven-$version-bin.tar.gz"
+          curl -fsSL "$url" -o "$archive"
+          echo "$checksum  $archive" | sha512sum --check -
+          tar -xzf "$archive" -C "$RUNNER_TEMP"
+          maven_bin="$RUNNER_TEMP/apache-maven-$version/bin"
+          echo "$maven_bin" >> "$GITHUB_PATH"
+          export PATH="$maven_bin:$PATH"
+          mvn --version | grep -q '^Apache Maven 3.9.16 '
+      - name: Publish and sign Maven Central artifacts
+        if: steps.registry.outputs.exists == 'false'
+        run: mvn --batch-mode -P release deploy
+        working-directory: java
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+      - name: Confirm Maven Central version is available
+        env:
+          ARTIFACT: "{{MAVEN_ARTIFACT}}"
+          VERSION: ${{ needs.verify-release-version.outputs.version }}
+        run: |
+          python - <<'PY'
+          import os, time, urllib.error, urllib.request, xml.etree.ElementTree as ET
+          artifact = os.environ["ARTIFACT"]
+          version = os.environ["VERSION"]
+          url = f"https://repo.maven.apache.org/maven2/net/crawlora/{artifact}/{version}/{artifact}-{version}.pom"
+          request = urllib.request.Request(url, headers={"Accept": "application/xml"})
+          deadline = time.monotonic() + 900
+          while True:
+              remaining = deadline - time.monotonic()
+              if remaining <= 0:
+                  raise SystemExit("Maven Central version is not visible after 15 minutes")
+              try:
+                  with urllib.request.urlopen(request, timeout=min(20, remaining)) as response:
+                      pom = ET.fromstring(response.read())
+                  ns = {"m": "http://maven.apache.org/POM/4.0.0"}
+                  coords = (pom.findtext("m:groupId", namespaces=ns), pom.findtext("m:artifactId", namespaces=ns), pom.findtext("m:version", namespaces=ns))
+                  if coords == ("net.crawlora", artifact, version):
+                      print("Maven Central version is available")
+                      break
+                  raise SystemExit("Maven Central returned mismatched POM coordinates")
+              except urllib.error.HTTPError as error:
+                  if error.code != 404:
+                      raise SystemExit(f"Maven Central verification failed with HTTP {error.code}")
+                  time.sleep(min(15, remaining))
+              except urllib.error.URLError as error:
+                  raise SystemExit(f"Maven Central verification failed: {error.reason}")
+              else:
+                  time.sleep(min(15, remaining))
+          PY
+
+  publish-github-packages:
+    needs: [validate, verify-release-version]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check exact version in GitHub Packages
+        id: registry
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: "Crawlora-org/crawlora-{{PLATFORM}}"
+          GROUP_ID: "net.crawlora"
+          ARTIFACT_ID: "{{MAVEN_ARTIFACT}}"
+          VERSION: ${{ needs.verify-release-version.outputs.version }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.error, urllib.parse, urllib.request
+          headers = {"Accept": "application/vnd.github+json", "Authorization": "Bearer " + os.environ["GH_TOKEN"], "X-GitHub-Api-Version": "2022-11-28"}
+          packages_url = "https://api.github.com/orgs/Crawlora-org/packages?package_type=maven&per_page=100"
+          try:
+              with urllib.request.urlopen(urllib.request.Request(packages_url, headers=headers), timeout=20) as response:
+                  packages = json.load(response)
+          except urllib.error.HTTPError as error:
+              raise SystemExit(f"GitHub Packages lookup failed with HTTP {error.code}")
+          if not isinstance(packages, list):
+              raise SystemExit("GitHub Packages returned malformed version metadata")
+          repository = os.environ["REPOSITORY"].lower()
+          expected_names = {os.environ["ARTIFACT_ID"], os.environ["GROUP_ID"] + ":" + os.environ["ARTIFACT_ID"], os.environ["GROUP_ID"] + "." + os.environ["ARTIFACT_ID"]}
+          exists = False
+          for package in packages:
+              if not isinstance(package, dict):
+                  raise SystemExit("GitHub Packages returned malformed package metadata")
+              linked_repo = package.get("repository")
+              linked_name = linked_repo.get("full_name") if isinstance(linked_repo, dict) else ""
+              if linked_name.lower() != repository and package.get("name") not in expected_names:
+                  continue
+              package_url = package.get("url")
+              parsed_url = urllib.parse.urlparse(str(package_url or ""))
+              if parsed_url.hostname != "api.github.com" or "/packages/maven/" not in parsed_url.path:
+                  raise SystemExit("GitHub Packages returned an invalid Maven package URL")
+              versions_url = package_url.rstrip("/") + "/versions?per_page=100"
+              with urllib.request.urlopen(urllib.request.Request(versions_url, headers=headers), timeout=20) as response:
+                  versions = json.load(response)
+              if not isinstance(versions, list):
+                  raise SystemExit("GitHub Packages returned malformed version metadata")
+              exists = any(isinstance(item, dict) and item.get("name") == os.environ["VERSION"] for item in versions)
+              if exists:
+                  break
+          print(f"exists={str(exists).lower()}", file=open(os.environ["GITHUB_OUTPUT"], "a"))
+          PY
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+          cache-dependency-path: java/pom.xml
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - name: Publish Maven mirror to GitHub Packages
+        if: steps.registry.outputs.exists == 'false'
+        run: mvn --batch-mode -DskipTests deploy -DaltDeploymentRepository=github::default::https://maven.pkg.github.com/Crawlora-org/crawlora-{{PLATFORM}}
+        working-directory: java
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Confirm GitHub Packages version is available
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: "Crawlora-org/crawlora-{{PLATFORM}}"
+          GROUP_ID: "net.crawlora"
+          ARTIFACT_ID: "{{MAVEN_ARTIFACT}}"
+          VERSION: ${{ needs.verify-release-version.outputs.version }}
+        run: |
+          python - <<'PY'
+          import json, os, sys, time, urllib.error, urllib.parse, urllib.request
+          headers = {"Accept": "application/vnd.github+json", "Authorization": "Bearer " + os.environ["GH_TOKEN"], "X-GitHub-Api-Version": "2022-11-28"}
+          packages_url = "https://api.github.com/orgs/Crawlora-org/packages?package_type=maven&per_page=100"
+          repository = os.environ["REPOSITORY"].lower()
+          expected_names = {os.environ["ARTIFACT_ID"], os.environ["GROUP_ID"] + ":" + os.environ["ARTIFACT_ID"], os.environ["GROUP_ID"] + "." + os.environ["ARTIFACT_ID"]}
+          deadline = time.monotonic() + 300
+          while True:
+              remaining = deadline - time.monotonic()
+              if remaining <= 0:
+                  raise SystemExit("GitHub Packages version is not visible after 5 minutes")
+              try:
+                  with urllib.request.urlopen(urllib.request.Request(packages_url, headers=headers), timeout=min(20, remaining)) as response:
+                      packages = json.load(response)
+                  if not isinstance(packages, list):
+                      raise SystemExit("GitHub Packages returned malformed package metadata")
+                  for package in packages:
+                      if not isinstance(package, dict):
+                          raise SystemExit("GitHub Packages returned malformed package metadata")
+                      linked_repo = package.get("repository")
+                      linked_name = linked_repo.get("full_name") if isinstance(linked_repo, dict) else ""
+                      if linked_name.lower() != repository and package.get("name") not in expected_names:
+                          continue
+                      package_url = package.get("url")
+                      parsed_url = urllib.parse.urlparse(str(package_url or ""))
+                      if parsed_url.hostname != "api.github.com" or "/packages/maven/" not in parsed_url.path:
+                          raise SystemExit("GitHub Packages returned an invalid Maven package URL")
+                      versions_url = package_url.rstrip("/") + "/versions?per_page=100"
+                      with urllib.request.urlopen(urllib.request.Request(versions_url, headers=headers), timeout=min(20, remaining)) as response:
+                          versions = json.load(response)
+                      if not isinstance(versions, list):
+                          raise SystemExit("GitHub Packages returned malformed version metadata")
+                      if any(isinstance(item, dict) and item.get("name") == os.environ["VERSION"] for item in versions):
+                          print("GitHub Packages version is available")
+                          sys.exit(0)
+                  time.sleep(min(10, remaining))
+              except urllib.error.HTTPError as error:
+                  if error.code != 404:
+                      raise SystemExit(f"GitHub Packages verification failed with HTTP {error.code}")
+                  time.sleep(min(10, remaining))
+          PY
+
+  publish-packagist:
+    needs: [validate, verify-release-version]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          tools: composer:v2
+      - name: Validate and test the Composer package in the primary repository
+        run: composer validate --no-check-publish && composer test
+      - name: Refresh the Packagist package from this tag
+        env:
+          PACKAGE_URL: "https://github.com/Crawlora-org/crawlora-{{PLATFORM}}"
+          USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
+          API_TOKEN: ${{ secrets.PACKAGIST_API_TOKEN }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.error, urllib.parse, urllib.request
+          if not os.environ.get("USERNAME") or not os.environ.get("API_TOKEN"):
+              raise SystemExit("Packagist credentials are not configured")
+          request = urllib.request.Request(
+              "https://packagist.org/api/update-package",
+              data=json.dumps({"repository": os.environ["PACKAGE_URL"]}).encode(),
+              headers={"Content-Type": "application/json", "Accept": "application/json", "Authorization": "Bearer " + os.environ["USERNAME"] + ":" + os.environ["API_TOKEN"]},
+              method="POST",
+          )
+          try:
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  if response.status not in (200, 202):
+                      raise SystemExit(f"Packagist update failed with HTTP {response.status}")
+                  payload = json.load(response)
+                  if payload.get("status") != "success":
+                      raise SystemExit("Packagist update was not accepted")
+          except urllib.error.HTTPError as error:
+              raise SystemExit(f"Packagist update failed with HTTP {error.code}")
+          except urllib.error.URLError as error:
+              raise SystemExit(f"Packagist update failed: {error.reason}")
+          print("Packagist update request accepted")
+          PY
+      - name: Confirm exact version on Packagist
+        env:
+          PACKAGE: "{{COMPOSER_NAME}}"
+          VERSION: ${{ needs.verify-release-version.outputs.version }}
+        run: |
+          python - <<'PY'
+          import json, os, time, urllib.error, urllib.parse, urllib.request
+          package = os.environ["PACKAGE"]
+          url = "https://repo.packagist.org/p2/" + urllib.parse.quote(package, safe="/") + ".json"
+          deadline = time.monotonic() + 1200
+          while True:
+              remaining = deadline - time.monotonic()
+              if remaining <= 0:
+                  raise SystemExit("Packagist version is not visible after 20 minutes")
+              try:
+                  with urllib.request.urlopen(url, timeout=min(20, remaining)) as response:
+                      payload = json.load(response)
+                  packages = payload.get("packages", {}).get(package, [])
+                  if any(str(item.get("version", "")).removeprefix("v") == os.environ["VERSION"] for item in packages):
+                      print("Packagist version is available")
+                      break
+                  time.sleep(min(10, remaining))
+              except urllib.error.HTTPError as error:
+                  if error.code != 404:
+                      raise SystemExit(f"Packagist verification failed with HTTP {error.code}")
+                  time.sleep(min(10, remaining))
+              except urllib.error.URLError as error:
+                  raise SystemExit(f"Packagist verification failed: {error.reason}")
+          PY

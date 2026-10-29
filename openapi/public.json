@@ -1,0 +1,1101 @@
+{
+  "basePath": "/api/v1",
+  "definitions": {
+    "app.Response": {
+      "description": "The Response struct is used for wrapping the API response with a code, message, and data.",
+      "properties": {
+        "code": {
+          "description": "Code is the HTTP status code or a custom code used to indicate the result of the request\n@example 200",
+          "type": "integer"
+        },
+        "data": {
+          "description": "Data is the response data (can be any object or null)\n@example {\"id\": 1, \"name\": \"John Doe\"}"
+        },
+        "msg": {
+          "description": "Msg is the message that describes the result of the request\n@example \"Request successful\""
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.CategoriesResponse": {
+      "properties": {
+        "categories": {
+          "items": {
+            "$ref": "#/definitions/wallapop.Category"
+          },
+          "type": "array"
+        },
+        "count": {
+          "example": 997,
+          "type": "integer"
+        },
+        "fetched_at": {
+          "example": "2026-10-25T00:00:00Z",
+          "type": "string"
+        },
+        "max_depth": {
+          "example": 5,
+          "type": "integer"
+        },
+        "root_count": {
+          "example": 18,
+          "type": "integer"
+        },
+        "source_url": {
+          "example": "https://api.wallapop.com/api/v3/categories?context=search",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.Category": {
+      "properties": {
+        "depth": {
+          "example": 1,
+          "type": "integer"
+        },
+        "id": {
+          "example": 12465,
+          "type": "integer"
+        },
+        "is_leaf": {
+          "example": false,
+          "type": "boolean"
+        },
+        "name": {
+          "example": "Fashion & accessories",
+          "type": "string"
+        },
+        "parent_id": {
+          "example": 11002,
+          "type": "integer"
+        },
+        "path": {
+          "example": "fashion-and-accessories/women",
+          "type": "string"
+        },
+        "root_id": {
+          "example": 12465,
+          "type": "integer"
+        },
+        "vertical_id": {
+          "example": "fashion",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.FilterDefinition": {
+      "properties": {
+        "format": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "is_search_enabled": {
+          "type": "boolean"
+        },
+        "label": {
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "$ref": "#/definitions/wallapop.FilterOption"
+          },
+          "type": "array"
+        },
+        "options_endpoint": {
+          "type": "string"
+        },
+        "reload_when_changed": {
+          "type": "boolean"
+        },
+        "search_params": {
+          "additionalProperties": {
+            "$ref": "#/definitions/wallapop.FilterParamBinding"
+          },
+          "type": "object"
+        },
+        "selection": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/definitions/wallapop.FilterRangeStep"
+          },
+          "type": "array"
+        },
+        "title": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.FilterOption": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.FilterOptionsResponse": {
+      "properties": {
+        "brand": {
+          "type": "string"
+        },
+        "category_id": {
+          "type": "integer"
+        },
+        "fetched_at": {
+          "type": "string"
+        },
+        "filter_id": {
+          "type": "string"
+        },
+        "next_cursor": {
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "$ref": "#/definitions/wallapop.FilterOption"
+          },
+          "type": "array"
+        },
+        "options_query": {
+          "type": "string"
+        },
+        "page_size": {
+          "type": "integer"
+        },
+        "q": {
+          "type": "string"
+        },
+        "sort": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.FilterParamBinding": {
+      "properties": {
+        "param_key": {
+          "type": "string"
+        },
+        "param_value": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.FilterRangeStep": {
+      "properties": {
+        "end": {
+          "type": "number"
+        },
+        "increment": {
+          "type": "number"
+        },
+        "start": {
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.FiltersResponse": {
+      "properties": {
+        "category_id": {
+          "type": "integer"
+        },
+        "count": {
+          "type": "integer"
+        },
+        "fetched_at": {
+          "type": "string"
+        },
+        "filters": {
+          "items": {
+            "$ref": "#/definitions/wallapop.FilterDefinition"
+          },
+          "type": "array"
+        },
+        "query": {
+          "type": "string"
+        },
+        "root_category_id": {
+          "type": "integer"
+        },
+        "source_url": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.ItemDetailAttribute": {
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.ItemDetailCharacteristic": {
+      "properties": {
+        "attribute": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.ItemDetailCondition": {
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.ItemDetailRelatedSearch": {
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.ItemDetailResponse": {
+      "properties": {
+        "attributes": {
+          "items": {
+            "$ref": "#/definitions/wallapop.ItemDetailAttribute"
+          },
+          "type": "array"
+        },
+        "category_id": {
+          "type": "integer"
+        },
+        "characteristics": {
+          "items": {
+            "$ref": "#/definitions/wallapop.ItemDetailCharacteristic"
+          },
+          "type": "array"
+        },
+        "condition": {
+          "$ref": "#/definitions/wallapop.ItemDetailCondition"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "fetched_at": {
+          "type": "string"
+        },
+        "hashtags": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "images": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "location": {
+          "$ref": "#/definitions/wallapop.ListingLocation"
+        },
+        "price": {
+          "type": "number"
+        },
+        "related_searches": {
+          "items": {
+            "$ref": "#/definitions/wallapop.ItemDetailRelatedSearch"
+          },
+          "type": "array"
+        },
+        "shipping": {
+          "$ref": "#/definitions/wallapop.ListingShipping"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "taxonomy": {
+          "items": {
+            "$ref": "#/definitions/wallapop.ListingTaxonomy"
+          },
+          "type": "array"
+        },
+        "title": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.ListingCard": {
+      "properties": {
+        "category_id": {
+          "type": "integer"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "images": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "location": {
+          "$ref": "#/definitions/wallapop.ListingLocation"
+        },
+        "price": {
+          "type": "number"
+        },
+        "shipping": {
+          "$ref": "#/definitions/wallapop.ListingShipping"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "taxonomy": {
+          "items": {
+            "$ref": "#/definitions/wallapop.ListingTaxonomy"
+          },
+          "type": "array"
+        },
+        "title": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.ListingLocation": {
+      "properties": {
+        "city": {
+          "type": "string"
+        },
+        "country_code": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "region2": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.ListingShipping": {
+      "properties": {
+        "item_is_shippable": {
+          "type": "boolean"
+        },
+        "user_allows_shipping": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.ListingTaxonomy": {
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.SearchResponse": {
+      "properties": {
+        "category_id": {
+          "type": "integer"
+        },
+        "count": {
+          "type": "integer"
+        },
+        "country_code": {
+          "type": "string"
+        },
+        "fetched_at": {
+          "type": "string"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/definitions/wallapop.ListingCard"
+          },
+          "type": "array"
+        },
+        "next_cursor": {
+          "type": "string"
+        },
+        "query": {
+          "type": "string"
+        },
+        "sort": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.categoriesResponseDoc": {
+      "properties": {
+        "code": {
+          "example": 200,
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/wallapop.CategoriesResponse"
+        },
+        "msg": {
+          "example": "OK",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.filterOptionsResponseDoc": {
+      "properties": {
+        "code": {
+          "example": 200,
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/wallapop.FilterOptionsResponse"
+        },
+        "msg": {
+          "example": "OK",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.filtersResponseDoc": {
+      "properties": {
+        "code": {
+          "example": 200,
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/wallapop.FiltersResponse"
+        },
+        "msg": {
+          "example": "OK",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.itemDetailResponseDoc": {
+      "properties": {
+        "code": {
+          "example": 200,
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/wallapop.ItemDetailResponse"
+        },
+        "msg": {
+          "example": "OK",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "wallapop.searchResponseDoc": {
+      "properties": {
+        "code": {
+          "example": 200,
+          "type": "integer"
+        },
+        "data": {
+          "$ref": "#/definitions/wallapop.SearchResponse"
+        },
+        "msg": {
+          "example": "OK",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "host": "api.crawlora.net",
+  "info": {
+    "contact": {
+      "email": "support@crawlora.net",
+      "name": "API Support",
+      "url": "https://crawlora.net"
+    },
+    "description": "Crawlora is a hosted web-data and SERP API: call documented REST endpoints and get normalized JSON instead of HTML to parse — across search/SERP, maps and local, e-commerce, app stores, social, media and finance. One API key; Crawlora runs the proxy rotation, headless browsers and parsing behind the scenes. Billed pay-on-success: charged only on a successful 2xx response, 1-10 credits per call, with a free tier of 2,000 credits per month and no card. A hosted MCP server (mcp.crawlora.net/mcp) exposes the same catalog as agent tools. Search endpoints accept `q` as a universal alias for whichever search-term parameter they document (`query`, `term`, `keyword`, or Amazon's `k`), so one parameter name works across the whole catalog; an explicitly supplied documented name always wins.",
+    "license": {
+      "name": "Crawlora Terms of Service",
+      "url": "https://crawlora.net/terms"
+    },
+    "termsOfService": "https://crawlora.net/terms",
+    "title": "Crawlora API",
+    "version": "1.2",
+    "x-logo": {
+      "altText": "Crawlora",
+      "backgroundColor": "#FFFFFF",
+      "url": "https://raw.githubusercontent.com/Crawlora-org/crawlora-mcp/main/assets/logo-400x400.png"
+    }
+  },
+  "paths": {
+    "/wallapop/categories": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "Returns the complete live search taxonomy as a flat parent-linked list, including all descendant IDs used by /wallapop/search. Only IDs from this search taxonomy are accepted; legacy navigation-only IDs are excluded. Re-fetch periodically because the upstream taxonomy changes.",
+        "operationId": "wallapop-categories",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/wallapop.categoriesResponseDoc"
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Discover Wallapop search categories",
+        "tags": [
+          "wallapop"
+        ]
+      }
+    },
+    "/wallapop/filter-options": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "Returns one page from a remote option list advertised by /wallapop/filters. Use its exact filter_id and category_id. brand/model lists use a root category ID; category-specific lists use the selected category ID. Model discovery requires brand. Multi-select options such as size map to the live search parameter fashion_size. q and sort provide listing context; options_query narrows the option list. Follow next_cursor while repeating the same context; an empty terminal page has no next_cursor. Option IDs are accepted by /wallapop/search's filter parameter.",
+        "operationId": "wallapop-filter-options",
+        "parameters": [
+          {
+            "description": "Remote filter ID advertised by /wallapop/filters for this category",
+            "in": "query",
+            "name": "filter_id",
+            "required": true,
+            "type": "string",
+            "x-example": "item_language"
+          },
+          {
+            "description": "Live category ID from /wallapop/categories. Use a root for brand/model or the selected category for category-specific remote options.",
+            "in": "query",
+            "name": "category_id",
+            "required": true,
+            "type": "integer",
+            "x-example": 24100
+          },
+          {
+            "description": "Required with filter_id=model; a brand option ID",
+            "in": "query",
+            "name": "brand",
+            "type": "string",
+            "x-example": "BMW"
+          },
+          {
+            "description": "Optional listing search context",
+            "in": "query",
+            "name": "q",
+            "type": "string",
+            "x-example": "iphone"
+          },
+          {
+            "description": "Optional listing sort context",
+            "enum": [
+              "closest",
+              "most_relevance",
+              "newest",
+              "price_low_to_high",
+              "price_high_to_low"
+            ],
+            "in": "query",
+            "name": "sort",
+            "type": "string",
+            "x-example": "most_relevance"
+          },
+          {
+            "description": "Optional text search inside the dynamic option list",
+            "in": "query",
+            "name": "options_query",
+            "type": "string",
+            "x-example": "BMW"
+          },
+          {
+            "description": "Opaque next_cursor returned by this endpoint",
+            "in": "query",
+            "name": "cursor",
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/wallapop.filterOptionsResponseDoc"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Discover Wallapop remote filter values",
+        "tags": [
+          "wallapop"
+        ]
+      }
+    },
+    "/wallapop/filters": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "Returns Wallapop's live search filter schema for a query and optional category. Each filter includes its current type, the upstream search-enabled flag when provided, accepted parameter names, inline option values or slider bounds, and a category-scoped /wallapop/filter-options link for remote value lists.",
+        "operationId": "wallapop-filters",
+        "parameters": [
+          {
+            "description": "Optional search phrase used to select relevant filters",
+            "in": "query",
+            "name": "q",
+            "type": "string",
+            "x-example": "iphone"
+          },
+          {
+            "description": "Any live search taxonomy ID from /wallapop/categories",
+            "in": "query",
+            "name": "category_id",
+            "type": "integer",
+            "x-example": 100
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/wallapop.filtersResponseDoc"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Discover Wallapop search filters",
+        "tags": [
+          "wallapop"
+        ]
+      }
+    },
+    "/wallapop/item": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "Returns public listing details parsed from the anonymous server-rendered item page: description, price, taxonomy, condition, images, coarse location, shipping, category attributes, hashtags, and related-search links. Pass a clean https item URL returned by /wallapop/search, using es.wallapop.com, it.wallapop.com, or pt.wallapop.com. Seller/profile/contact data, exact coordinates, postal codes, favorites, and view-tracking state are omitted. The upstream may rate-limit or block requests; this endpoint uses the measured browser_android_native@fresh profile and retries up to three times.",
+        "operationId": "wallapop-item-detail",
+        "parameters": [
+          {
+            "description": "Clean https public item URL from /wallapop/search on es.wallapop.com, it.wallapop.com, or pt.wallapop.com",
+            "in": "query",
+            "name": "url",
+            "required": true,
+            "type": "string",
+            "x-example": "https%3A%2F%2Fes.wallapop.com%2Fitem%2Fchaqueta-1183989904"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/wallapop.itemDetailResponseDoc"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Fetch a public Wallapop listing detail page",
+        "tags": [
+          "wallapop"
+        ]
+      }
+    },
+    "/wallapop/search": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "Returns one page of public Wallapop listing cards with title, price, currency, images, coarse location, taxonomy, shipping state, and a public item URL. q is a free-text search. latitude and longitude are required caller-provided coordinates because Wallapop otherwise resolves location from the request egress. category_id accepts any ID returned by /wallapop/categories, including descendants. sort is one of closest, most_relevance, newest, price_low_to_high, or price_high_to_low. When category_id is supplied, discover condition values from /wallapop/filters; categories can add values beyond the base set. Use /wallapop/filter-options for remote filter values. Pass next_cursor back as cursor by itself to fetch the next page.",
+        "operationId": "wallapop-search",
+        "parameters": [
+          {
+            "description": "Free-text listing search, 2 to 200 characters",
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "type": "string",
+            "x-example": "iphone"
+          },
+          {
+            "description": "Caller-provided search latitude, -90 through 90",
+            "in": "query",
+            "name": "latitude",
+            "required": true,
+            "type": "number",
+            "x-example": 40.4168
+          },
+          {
+            "description": "Caller-provided search longitude, -180 through 180",
+            "in": "query",
+            "name": "longitude",
+            "required": true,
+            "type": "number",
+            "x-example": -3.7038
+          },
+          {
+            "description": "Any live search taxonomy ID from /wallapop/categories",
+            "in": "query",
+            "name": "category_id",
+            "type": "integer",
+            "x-example": 24200
+          },
+          {
+            "description": "Wallapop sort order",
+            "enum": [
+              "closest",
+              "most_relevance",
+              "newest",
+              "price_low_to_high",
+              "price_high_to_low"
+            ],
+            "in": "query",
+            "name": "sort",
+            "type": "string",
+            "x-example": "most_relevance"
+          },
+          {
+            "description": "Minimum sale price",
+            "in": "query",
+            "name": "min_price",
+            "type": "number",
+            "x-example": 10
+          },
+          {
+            "description": "Maximum sale price",
+            "in": "query",
+            "name": "max_price",
+            "type": "number",
+            "x-example": 500
+          },
+          {
+            "description": "Repeatable or comma-separated condition values. With category_id, use the current values from /wallapop/filters; without category_id, base values are new, as_good_as_new, good, fair, and has_given_it_all.",
+            "in": "query",
+            "name": "condition",
+            "type": "string",
+            "x-example": "new,good"
+          },
+          {
+            "description": "Pass true to limit to shipping-capable listings; omit to include all. false is rejected because Wallapop ignores it.",
+            "enum": [
+              "true"
+            ],
+            "in": "query",
+            "name": "is_shippable",
+            "type": "string",
+            "x-example": "true"
+          },
+          {
+            "description": "Listing date window",
+            "enum": [
+              "today",
+              "lastWeek",
+              "lastMonth"
+            ],
+            "in": "query",
+            "name": "time_filter",
+            "type": "string",
+            "x-example": "lastWeek"
+          },
+          {
+            "description": "Maximum distance from the supplied coordinates, 0 through 1000 km",
+            "in": "query",
+            "name": "distance_in_km",
+            "type": "integer",
+            "x-example": 25
+          },
+          {
+            "collectionFormat": "csv",
+            "description": "Repeatable category-specific key:value pair discovered from /wallapop/filters, e.g. brand:BMW, color:Black, has_warranty:true, storage_capacity:128gb, item_language:english, or fashion_size:3,4. For remote values use IDs returned by /wallapop/filter-options.",
+            "in": "query",
+            "items": {
+              "type": "string"
+            },
+            "name": "filter",
+            "type": "array",
+            "x-example": "storage_capacity:128gb"
+          },
+          {
+            "description": "Opaque next_cursor returned by a previous response. Use it alone, without initial search parameters.",
+            "in": "query",
+            "name": "cursor",
+            "type": "string",
+            "x-example": "eyJ2IjoxLCJuZXh0X3BhZ2UiOiJ..."
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/wallapop.searchResponseDoc"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "$ref": "#/definitions/app.Response"
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Search Wallapop public listings",
+        "tags": [
+          "wallapop"
+        ]
+      }
+    }
+  },
+  "schemes": [
+    "https"
+  ],
+  "securityDefinitions": {
+    "ApiKeyAuth": {
+      "in": "header",
+      "name": "x-api-key",
+      "type": "apiKey"
+    }
+  },
+  "swagger": "2.0",
+  "tags": [
+    {
+      "name": "wallapop"
+    }
+  ]
+}

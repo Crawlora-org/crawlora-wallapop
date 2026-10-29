@@ -1,0 +1,444 @@
+{
+  "platform": "wallapop",
+  "operationCount": 5,
+  "operationIds": [
+    "wallapop-categories",
+    "wallapop-filter-options",
+    "wallapop-filters",
+    "wallapop-item-detail",
+    "wallapop-search"
+  ],
+  "methods": {
+    "categories": "wallapop-categories",
+    "filter_options": "wallapop-filter-options",
+    "filters": "wallapop-filters",
+    "item_detail": "wallapop-item-detail",
+    "search": "wallapop-search"
+  },
+  "operations": {
+    "wallapop-categories": {
+      "id": "wallapop-categories",
+      "method": "GET",
+      "path": "/wallapop/categories",
+      "pathParams": [],
+      "queryParams": [],
+      "bodyParam": null,
+      "bodyRequired": false,
+      "params": [],
+      "produces": [
+        "application/json"
+      ],
+      "security": [
+        "ApiKeyAuth"
+      ]
+    },
+    "wallapop-filter-options": {
+      "id": "wallapop-filter-options",
+      "method": "GET",
+      "path": "/wallapop/filter-options",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "filter_id",
+          "in": "query",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "category_id",
+          "in": "query",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "name": "brand",
+          "in": "query",
+          "type": "string"
+        },
+        {
+          "name": "q",
+          "in": "query",
+          "type": "string"
+        },
+        {
+          "name": "sort",
+          "in": "query",
+          "type": "string",
+          "enum": [
+            "closest",
+            "most_relevance",
+            "newest",
+            "price_low_to_high",
+            "price_high_to_low"
+          ]
+        },
+        {
+          "name": "options_query",
+          "in": "query",
+          "type": "string"
+        },
+        {
+          "name": "cursor",
+          "in": "query",
+          "type": "string"
+        }
+      ],
+      "bodyParam": null,
+      "bodyRequired": false,
+      "params": [
+        {
+          "description": "Remote filter ID advertised by /wallapop/filters for this category",
+          "in": "query",
+          "name": "filter_id",
+          "required": true,
+          "type": "string",
+          "x-example": "item_language"
+        },
+        {
+          "description": "Live category ID from /wallapop/categories. Use a root for brand/model or the selected category for category-specific remote options.",
+          "in": "query",
+          "name": "category_id",
+          "required": true,
+          "type": "integer",
+          "x-example": 24100
+        },
+        {
+          "description": "Required with filter_id=model; a brand option ID",
+          "in": "query",
+          "name": "brand",
+          "type": "string",
+          "x-example": "BMW"
+        },
+        {
+          "description": "Optional listing search context",
+          "in": "query",
+          "name": "q",
+          "type": "string",
+          "x-example": "iphone"
+        },
+        {
+          "description": "Optional listing sort context",
+          "enum": [
+            "closest",
+            "most_relevance",
+            "newest",
+            "price_low_to_high",
+            "price_high_to_low"
+          ],
+          "in": "query",
+          "name": "sort",
+          "type": "string",
+          "x-example": "most_relevance"
+        },
+        {
+          "description": "Optional text search inside the dynamic option list",
+          "in": "query",
+          "name": "options_query",
+          "type": "string",
+          "x-example": "BMW"
+        },
+        {
+          "description": "Opaque next_cursor returned by this endpoint",
+          "in": "query",
+          "name": "cursor",
+          "type": "string"
+        }
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "security": [
+        "ApiKeyAuth"
+      ]
+    },
+    "wallapop-filters": {
+      "id": "wallapop-filters",
+      "method": "GET",
+      "path": "/wallapop/filters",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "q",
+          "in": "query",
+          "type": "string"
+        },
+        {
+          "name": "category_id",
+          "in": "query",
+          "type": "integer"
+        }
+      ],
+      "bodyParam": null,
+      "bodyRequired": false,
+      "params": [
+        {
+          "description": "Optional search phrase used to select relevant filters",
+          "in": "query",
+          "name": "q",
+          "type": "string",
+          "x-example": "iphone"
+        },
+        {
+          "description": "Any live search taxonomy ID from /wallapop/categories",
+          "in": "query",
+          "name": "category_id",
+          "type": "integer",
+          "x-example": 100
+        }
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "security": [
+        "ApiKeyAuth"
+      ]
+    },
+    "wallapop-item-detail": {
+      "id": "wallapop-item-detail",
+      "method": "GET",
+      "path": "/wallapop/item",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "url",
+          "in": "query",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "bodyParam": null,
+      "bodyRequired": false,
+      "params": [
+        {
+          "description": "Clean https public item URL from /wallapop/search on es.wallapop.com, it.wallapop.com, or pt.wallapop.com",
+          "in": "query",
+          "name": "url",
+          "required": true,
+          "type": "string",
+          "x-example": "https%3A%2F%2Fes.wallapop.com%2Fitem%2Fchaqueta-1183989904"
+        }
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "security": [
+        "ApiKeyAuth"
+      ]
+    },
+    "wallapop-search": {
+      "id": "wallapop-search",
+      "method": "GET",
+      "path": "/wallapop/search",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "q",
+          "in": "query",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "latitude",
+          "in": "query",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "longitude",
+          "in": "query",
+          "type": "number",
+          "required": true
+        },
+        {
+          "name": "category_id",
+          "in": "query",
+          "type": "integer"
+        },
+        {
+          "name": "sort",
+          "in": "query",
+          "type": "string",
+          "enum": [
+            "closest",
+            "most_relevance",
+            "newest",
+            "price_low_to_high",
+            "price_high_to_low"
+          ]
+        },
+        {
+          "name": "min_price",
+          "in": "query",
+          "type": "number"
+        },
+        {
+          "name": "max_price",
+          "in": "query",
+          "type": "number"
+        },
+        {
+          "name": "condition",
+          "in": "query",
+          "type": "string"
+        },
+        {
+          "name": "is_shippable",
+          "in": "query",
+          "type": "string",
+          "enum": [
+            "true"
+          ]
+        },
+        {
+          "name": "time_filter",
+          "in": "query",
+          "type": "string",
+          "enum": [
+            "today",
+            "lastWeek",
+            "lastMonth"
+          ]
+        },
+        {
+          "name": "distance_in_km",
+          "in": "query",
+          "type": "integer"
+        },
+        {
+          "name": "filter",
+          "in": "query",
+          "collectionFormat": "csv",
+          "type": "array"
+        },
+        {
+          "name": "cursor",
+          "in": "query",
+          "type": "string"
+        }
+      ],
+      "bodyParam": null,
+      "bodyRequired": false,
+      "params": [
+        {
+          "description": "Free-text listing search, 2 to 200 characters",
+          "in": "query",
+          "name": "q",
+          "required": true,
+          "type": "string",
+          "x-example": "iphone"
+        },
+        {
+          "description": "Caller-provided search latitude, -90 through 90",
+          "in": "query",
+          "name": "latitude",
+          "required": true,
+          "type": "number",
+          "x-example": 40.4168
+        },
+        {
+          "description": "Caller-provided search longitude, -180 through 180",
+          "in": "query",
+          "name": "longitude",
+          "required": true,
+          "type": "number",
+          "x-example": -3.7038
+        },
+        {
+          "description": "Any live search taxonomy ID from /wallapop/categories",
+          "in": "query",
+          "name": "category_id",
+          "type": "integer",
+          "x-example": 24200
+        },
+        {
+          "description": "Wallapop sort order",
+          "enum": [
+            "closest",
+            "most_relevance",
+            "newest",
+            "price_low_to_high",
+            "price_high_to_low"
+          ],
+          "in": "query",
+          "name": "sort",
+          "type": "string",
+          "x-example": "most_relevance"
+        },
+        {
+          "description": "Minimum sale price",
+          "in": "query",
+          "name": "min_price",
+          "type": "number",
+          "x-example": 10
+        },
+        {
+          "description": "Maximum sale price",
+          "in": "query",
+          "name": "max_price",
+          "type": "number",
+          "x-example": 500
+        },
+        {
+          "description": "Repeatable or comma-separated condition values. With category_id, use the current values from /wallapop/filters; without category_id, base values are new, as_good_as_new, good, fair, and has_given_it_all.",
+          "in": "query",
+          "name": "condition",
+          "type": "string",
+          "x-example": "new,good"
+        },
+        {
+          "description": "Pass true to limit to shipping-capable listings; omit to include all. false is rejected because Wallapop ignores it.",
+          "enum": [
+            "true"
+          ],
+          "in": "query",
+          "name": "is_shippable",
+          "type": "string",
+          "x-example": "true"
+        },
+        {
+          "description": "Listing date window",
+          "enum": [
+            "today",
+            "lastWeek",
+            "lastMonth"
+          ],
+          "in": "query",
+          "name": "time_filter",
+          "type": "string",
+          "x-example": "lastWeek"
+        },
+        {
+          "description": "Maximum distance from the supplied coordinates, 0 through 1000 km",
+          "in": "query",
+          "name": "distance_in_km",
+          "type": "integer",
+          "x-example": 25
+        },
+        {
+          "collectionFormat": "csv",
+          "description": "Repeatable category-specific key:value pair discovered from /wallapop/filters, e.g. brand:BMW, color:Black, has_warranty:true, storage_capacity:128gb, item_language:english, or fashion_size:3,4. For remote values use IDs returned by /wallapop/filter-options.",
+          "in": "query",
+          "items": {
+            "type": "string"
+          },
+          "name": "filter",
+          "type": "array",
+          "x-example": "storage_capacity:128gb"
+        },
+        {
+          "description": "Opaque next_cursor returned by a previous response. Use it alone, without initial search parameters.",
+          "in": "query",
+          "name": "cursor",
+          "type": "string",
+          "x-example": "eyJ2IjoxLCJuZXh0X3BhZ2UiOiJ..."
+        }
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "security": [
+        "ApiKeyAuth"
+      ]
+    }
+  }
+}
