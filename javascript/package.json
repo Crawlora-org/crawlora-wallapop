@@ -1,6 +1,6 @@
 {
   "name": "@crawlora-org/wallapop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Crawlora Wallapop API client with 5 endpoints for public listing search, categories, filters, and item details",
   "homepage": "https://crawlora.net/?utm_source=npm&utm_medium=referral&utm_campaign=platform-clients&utm_content=wallapop-javascript-homepage",
   "bugs": { "url": "https://github.com/Crawlora-org/crawlora-wallapop/issues" },

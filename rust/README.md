@@ -30,7 +30,7 @@ To pin a release directly in `Cargo.toml`:
 
 ```toml
 [dependencies]
-crawlora-wallapop = "0.1.0"
+crawlora-wallapop = "0.1.1"
 ```
 
 Create an account at [crawlora.net](https://crawlora.net/signup?utm_source=crates.io&utm_medium=referral&utm_campaign=platform-clients&utm_content=wallapop-rust-signup), then [create an API key](https://crawlora.net/app/api-keys?utm_source=crates.io&utm_medium=referral&utm_campaign=platform-clients&utm_content=wallapop-rust-api-keys). Keep the key out of source control and load it from the environment:

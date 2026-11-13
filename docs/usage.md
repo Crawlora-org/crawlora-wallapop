@@ -2,7 +2,7 @@
 
 This reference lists all 5 public Wallapop API endpoints exposed by the JavaScript/TypeScript, Python, Go, Ruby, Java, PHP, and Rust clients, including the `@crawlora-org/wallapop`, `crawlora-wallapop`, and `crawlora-wallapop` packages. The clients call Crawlora's hosted API. Set `CRAWLORA_API_KEY` to a key for your Crawlora account before making requests. Service usage is billed under that account. These clients do not run a browser or scrape Wallapop locally; Crawlora is independent from and not endorsed by Wallapop or its owners.
 
-The package tracks the public API contract revision `sha256:b02fd52a304c711998d8723a17adfd9b3eb7815d77f444a3f276679cf8ff4019` bundled with release `0.1.0`. Maintainers can preview daily contract updates with the repository's `Sync live API contract` workflow; unchanged contracts do not produce package releases.
+The package tracks the public API contract revision `sha256:1ca3efeec45964fec9b408035f3dc4fd245fe008c7acacb8cc66f484e926a996` bundled with release `0.1.1`. Maintainers can preview daily contract updates with the repository's `Sync live API contract` workflow; unchanged contracts do not produce package releases.
 
 All language packages expose the selected public API operations in the bundled contract. JavaScript uses camelCase methods, Python and Rust use snake_case methods. JavaScript, Python, and Rust methods are grouped under `wallapop`; Rust uses typed parameter structs and returns the complete HTTP response.
 

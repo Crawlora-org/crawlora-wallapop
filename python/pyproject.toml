@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "crawlora-wallapop"
-version = "0.1.0"
+version = "0.1.1"
 description = "Crawlora Wallapop API client with 5 endpoints for public listing search, categories, filters, and item details"
 readme = "README.md"
 keywords = ["crawlora", "api-client", "sdk", "web-scraping", "scraping-api", "wallapop", "wallapop-api", "wallapop-scraper", "wallapop-data", "wallapop-public-listing-search", "wallapop-categories", "wallapop-filters", "wallapop-item-details"]

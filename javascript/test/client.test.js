@@ -26,7 +26,7 @@ test("serializes required query/path values, adds API key and platform User-Agen
   await client.request("wallapop-filter-options", {"filter_id": "sample", "category_id": 1});
   assert.match(seen.url, /\/wallapop\/filter\-options/);
   assert.equal(seen.headers["x-api-key"], "secret");
-  assert.equal(seen.headers["user-agent"], "crawlora-wallapop-js/0.1.0");
+  assert.equal(seen.headers["user-agent"], "crawlora-wallapop-js/0.1.1");
 });
 
 test("allows caller User-Agent override and response text mode", async () => {

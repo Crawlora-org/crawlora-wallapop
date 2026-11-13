@@ -6,10 +6,10 @@ from .operations import OPERATION_COUNT, OPERATION_IDS, PLATFORM
 
 Client = WallapopClient
 AsyncClient = AsyncWallapopClient
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 DISPLAY_NAME = 'Wallapop'
 PLATFORM = 'wallapop'
-CONTRACT_REVISION = 'sha256:b02fd52a304c711998d8723a17adfd9b3eb7815d77f444a3f276679cf8ff4019'
+CONTRACT_REVISION = 'sha256:1ca3efeec45964fec9b408035f3dc4fd245fe008c7acacb8cc66f484e926a996'
 
 __all__ = [
     "WallapopClient", "AsyncWallapopClient", "Client", "AsyncClient",
