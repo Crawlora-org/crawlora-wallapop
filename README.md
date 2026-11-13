@@ -8,7 +8,7 @@ Official Crawlora client packages for the hosted Wallapop API. Access 5 API endp
 - Python: [`crawlora-wallapop`](python/README.md)
 - Go: [`github.com/Crawlora-org/crawlora-wallapop`](go.mod)
 - Ruby: [`crawlora-wallapop`](ruby/README.md)
-- Java: [`net.crawlora:crawlora-wallapop:0.1.0`](java/README.md)
+- Java: [`net.crawlora:crawlora-wallapop:0.1.1`](java/README.md)
 - PHP: [`crawlora/wallapop`](php/README.md)
 - Rust: [`crawlora-wallapop`](rust/README.md)
 

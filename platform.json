@@ -2,11 +2,11 @@
   "api_path_prefix": "/wallapop/",
   "async_class_name": "AsyncWallapopClient",
   "class_name": "WallapopClient",
-  "contract_revision": "sha256:b02fd52a304c711998d8723a17adfd9b3eb7815d77f444a3f276679cf8ff4019",
+  "contract_revision": "sha256:1ca3efeec45964fec9b408035f3dc4fd245fe008c7acacb8cc66f484e926a996",
   "display_name": "Wallapop",
   "general_sdk_version": "1.50.0-sdk.1",
   "golang_module_name": "github.com/Crawlora-org/crawlora-wallapop",
-  "golang_version": "0.1.0",
+  "golang_version": "0.1.1",
   "group_name": "wallapop",
   "java_description": "Java client for Crawlora's hosted Wallapop API, with public listing search, categories, filters, and item details. Requires a Crawlora API key.",
   "maven_artifact_id": "crawlora-wallapop",
@@ -17,10 +17,27 @@
   "php_repository": "https://github.com/Crawlora-org/crawlora-wallapop",
   "platform": "wallapop",
   "python_name": "crawlora-wallapop",
+  "releases": [
+    {
+      "changes": [
+        "Updated operation contracts: wallapop-item-detail, wallapop-search."
+      ],
+      "date": "2026-11-13",
+      "version": "0.1.1"
+    },
+    {
+      "changes": [
+        "Initial Wallapop platform clients for Crawlora's hosted API across JavaScript/TypeScript, Python, Go, Ruby, Java, PHP, and Rust.",
+        "Includes typed endpoint methods generated from contract revision `sha256:b02fd52a304c711998d8723a17adfd9b3eb7815d77f444a3f276679cf8ff4019`."
+      ],
+      "date": "2026-10-07",
+      "version": "0.1.0"
+    }
+  ],
   "repository": "https://github.com/Crawlora-org/crawlora-wallapop",
   "ruby_gem_name": "crawlora-wallapop",
   "rust_crate_name": "crawlora-wallapop",
   "rust_module_name": "crawlora_wallapop",
-  "source_contract_sha256": "b02fd52a304c711998d8723a17adfd9b3eb7815d77f444a3f276679cf8ff4019",
-  "version": "0.1.0"
+  "source_contract_sha256": "123c5406ee3b92b07d2ef3dbe21a6ded54b79b25d26c13cbb905a34e3ecc7118",
+  "version": "0.1.1"
 }

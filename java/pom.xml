@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>net.crawlora</groupId>
   <artifactId>crawlora-wallapop</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
   <packaging>jar</packaging>
   <name>Crawlora Wallapop Java Client</name>
   <description>Java client for Crawlora's hosted Wallapop API, with public listing search, categories, filters, and item details. Requires a Crawlora API key.</description>
@@ -35,6 +35,6 @@
     <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-source-plugin</artifactId><version>3.3.1</version><executions><execution><id>attach-sources</id><goals><goal>jar-no-fork</goal></goals></execution></executions></plugin>
     <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-javadoc-plugin</artifactId><version>3.6.3</version><executions><execution><id>attach-javadocs</id><goals><goal>jar</goal></goals></execution></executions></plugin>
     <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-gpg-plugin</artifactId><version>3.2.4</version><configuration><passphraseEnvName>MAVEN_GPG_PASSPHRASE</passphraseEnvName><gpgArguments><arg>--pinentry-mode</arg><arg>loopback</arg></gpgArguments></configuration><executions><execution><id>sign-artifacts</id><phase>verify</phase><goals><goal>sign</goal></goals></execution></executions></plugin>
-    <plugin><groupId>org.sonatype.central</groupId><artifactId>central-publishing-maven-plugin</artifactId><version>0.11.0</version><extensions>true</extensions><configuration><publishingServerId>central</publishingServerId><autoPublish>true</autoPublish><deploymentName>Crawlora Wallapop 0.1.0</deploymentName><waitUntil>published</waitUntil></configuration></plugin>
+    <plugin><groupId>org.sonatype.central</groupId><artifactId>central-publishing-maven-plugin</artifactId><version>0.11.0</version><extensions>true</extensions><configuration><publishingServerId>central</publishingServerId><autoPublish>true</autoPublish><deploymentName>Crawlora Wallapop 0.1.1</deploymentName><waitUntil>published</waitUntil></configuration></plugin>
   </plugins></build></profile></profiles>
 </project>

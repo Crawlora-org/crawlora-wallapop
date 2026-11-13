@@ -9,7 +9,7 @@ import {
 
 export class WallapopClient extends CrawloraClient {
   constructor(options = {}) {
-    super({ ...options, userAgent: options.userAgent ?? "crawlora-wallapop-js/0.1.0" });
+    super({ ...options, userAgent: options.userAgent ?? "crawlora-wallapop-js/0.1.1" });
     this["categories"] = (...args) => this.request("wallapop-categories", ...args);
     this["filterOptions"] = (...args) => this.request("wallapop-filter-options", ...args);
     this["filters"] = (...args) => this.request("wallapop-filters", ...args);
@@ -27,5 +27,5 @@ export {
   CrawloraServerError
 };
 export { groups, operations, operationCount, OperationIds } from "./operations.js";
-export const VERSION = "0.1.0";
+export const VERSION = "0.1.1";
 export default WallapopClient;

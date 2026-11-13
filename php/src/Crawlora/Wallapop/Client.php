@@ -26,7 +26,7 @@ final class Client
     private ?\Closure $transport;
 
     public const PLATFORM = 'wallapop';
-    public const VERSION = '0.1.0';
+    public const VERSION = '0.1.1';
     public const OPERATION_COUNT = 5;
     public const OPERATION_IDS = ["wallapop-categories", "wallapop-filter-options", "wallapop-filters", "wallapop-item-detail", "wallapop-search"];
 
@@ -57,7 +57,7 @@ JSON, true, 512, JSON_THROW_ON_ERROR);
         $url = $this->buildUrl($operation, $params);
         $headers = [
             'x-api-key: ' . $this->apiKey,
-            'User-Agent: crawlora-wallapop-php/0.1.0',
+            'User-Agent: crawlora-wallapop-php/0.1.1',
             'Accept: ' . (in_array('text/plain', $operation['produces'], true) ? 'application/json, text/plain' : 'application/json'),
         ];
         if ($payload !== null) {

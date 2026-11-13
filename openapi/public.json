@@ -843,7 +843,7 @@
         "consumes": [
           "application/json"
         ],
-        "description": "Returns public listing details parsed from the anonymous server-rendered item page: description, price, taxonomy, condition, images, coarse location, shipping, category attributes, hashtags, and related-search links. Pass a clean https item URL returned by /wallapop/search, using es.wallapop.com, it.wallapop.com, or pt.wallapop.com. Seller/profile/contact data, exact coordinates, postal codes, favorites, and view-tracking state are omitted. The upstream may rate-limit or block requests; this endpoint uses the measured browser_android_native@fresh profile and retries up to three times.",
+        "description": "Returns public listing details parsed from the anonymous server-rendered item page: description, price, taxonomy, condition, images, coarse location, shipping, category attributes, hashtags, and related-search links. Pass a clean https item URL returned by /wallapop/search, using es.wallapop.com, it.wallapop.com, or pt.wallapop.com. Seller/profile/contact data, exact coordinates, postal codes, favorites, and view-tracking state are omitted. The upstream may rate-limit or block requests; this endpoint retries automatically (up to three attempts).",
         "operationId": "wallapop-item-detail",
         "parameters": [
           {
@@ -912,7 +912,7 @@
         "consumes": [
           "application/json"
         ],
-        "description": "Returns one page of public Wallapop listing cards with title, price, currency, images, coarse location, taxonomy, shipping state, and a public item URL. q is a free-text search. latitude and longitude are required caller-provided coordinates because Wallapop otherwise resolves location from the request egress. category_id accepts any ID returned by /wallapop/categories, including descendants. sort is one of closest, most_relevance, newest, price_low_to_high, or price_high_to_low. When category_id is supplied, discover condition values from /wallapop/filters; categories can add values beyond the base set. Use /wallapop/filter-options for remote filter values. Pass next_cursor back as cursor by itself to fetch the next page.",
+        "description": "Returns one page of public Wallapop listing cards with title, price, currency, images, coarse location, taxonomy, shipping state, and a public item URL. q is a free-text search. latitude and longitude are required caller-provided coordinates because Wallapop otherwise infers location from the server's network location. category_id accepts any ID returned by /wallapop/categories, including descendants. sort is one of closest, most_relevance, newest, price_low_to_high, or price_high_to_low. When category_id is supplied, discover condition values from /wallapop/filters; categories can add values beyond the base set. Use /wallapop/filter-options for remote filter values. Pass next_cursor back as cursor by itself to fetch the next page.",
         "operationId": "wallapop-search",
         "parameters": [
           {

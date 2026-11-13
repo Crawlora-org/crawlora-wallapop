@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1 — 2026-11-13
+
+- Updated operation contracts: wallapop-item-detail, wallapop-search.
+
 ## 0.1.0 — 2026-10-07
 
 - Initial Wallapop platform clients for Crawlora's hosted API across JavaScript/TypeScript, Python, Go, Ruby, Java, PHP, and Rust.

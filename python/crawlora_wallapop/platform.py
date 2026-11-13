@@ -7,7 +7,7 @@ from .async_client import AsyncCrawloraClient
 class WallapopClient(CrawloraClient):
     """Synchronous Wallapop API client."""
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        kwargs.setdefault('user_agent', 'crawlora-wallapop-python/0.1.0')
+        kwargs.setdefault('user_agent', 'crawlora-wallapop-python/0.1.1')
         super().__init__(*args, **kwargs)
 
     def categories(self, **params: Any) -> Any:
@@ -43,7 +43,7 @@ class WallapopClient(CrawloraClient):
 class AsyncWallapopClient(AsyncCrawloraClient):
     """Asynchronous Wallapop API client."""
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        kwargs.setdefault('user_agent', 'crawlora-wallapop-python/0.1.0')
+        kwargs.setdefault('user_agent', 'crawlora-wallapop-python/0.1.1')
         super().__init__(*args, **kwargs)
 
     async def categories(self, **params: Any) -> Any:
